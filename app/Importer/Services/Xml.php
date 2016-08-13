@@ -130,6 +130,9 @@ class Xml extends Importer implements Importable
 			}
 		}
 
+		// free memory
+		unset($this->import_data);
+
 		$this->logger->info("Import was done.");
 		$this->logger->info("Orders [created, updated, error]", [$count_of_success_created, $count_of_success_updated, $count_of_errors]);
 
