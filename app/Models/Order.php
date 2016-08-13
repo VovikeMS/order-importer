@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Order extends Model
 {
-    protected $fillable = ['shop_id', 'order_id', 'status', 'cost', 'currency', 'imported_at'];
+    protected $fillable = ['shop_id', 'order_id', 'status', 'cost', 'currency', 'imported_at', 'created_at'];
 
 	//
 }

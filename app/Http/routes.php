@@ -23,9 +23,11 @@ Route::get('/import', function () {
 
 	Log::info('Start import of orders from APIs');
 
-	// create instance for xml importer
+	// Run xml importer
 	try{
 		$xml_importer = Importer::create('xml', env('XML_API_SOURCE'));
+		if($xml_importer->validate())
+			$xml_importer->import();
 	}catch(Exception $e){
 		Log::error($e->getMessage());
 	}
