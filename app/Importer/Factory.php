@@ -29,7 +29,7 @@ abstract class Factory
 			throw new \Exception("Uncaught type of importer [$type]. Importer abort");
 
 		switch($type){
-			case 'cvs': return new Csv($resource);
+			case 'csv': return new Csv($resource);
 			case 'xml': return new Xml($resource);
 		}
 
