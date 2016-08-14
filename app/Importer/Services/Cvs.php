@@ -4,6 +4,7 @@ namespace App\Importer\Services;
 
 use App\Importer\Importable;
 use App\Importer\Importer;
+use App\Models\Order;
 
 class Csv extends Importer implements Importable
 {
@@ -50,6 +51,8 @@ class Csv extends Importer implements Importable
 	private $required_fields = [
 		'program_id',
 		'unique_transaction_id',
+		'ebay_total_sale_amount',
+		'click_timestamp',
 	];
 
 	/**
@@ -111,11 +114,95 @@ class Csv extends Importer implements Importable
 	/**
 	 * Start process
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function import()
 	{
-		//
+		$this->logger->info('Start import orders into DB.');
+		$count_of_success_created = 0;
+		$count_of_success_updated = 0;
+		$count_of_errors = 0;
+
+		foreach($this->import_data as $index=>$elem){
+
+			if($elem['event_type'] != 'Winning Bid (Revenue)') continue;
+
+			if(!$this->validateOrder($elem)){
+				$this->logger->warning("Order validation error. Order index [$index]", [$elem]);
+				$count_of_errors++;
+				continue;
+			}
+
+			$now = date('Y-m-d H:i:s');
+
+			$order = Order::where('order_id', '=', $elem['unique_transaction_id'])->first();
+			if($order == null){
+				// new order
+				$order = new Order();
+
+				// FIXME. Implement saving not found field from CSV into DB
+				$order->fill([
+					'order_id'      => $elem['unique_transaction_id'],
+					'shop_id'       => $elem['program_id'],
+					//'status'        => null,
+					'cost'          => $elem['ebay_total_sale_amount'],
+					//'currency'      => null,
+					'created_at'    => $elem['click_timestamp'],
+					'imported_at'   => $now
+				]);
+				try{
+					$order->save();
+					$count_of_success_created++;
+				}catch(\Exception $e){
+					$count_of_errors++;
+					$this->logger->error('Database exception: '.$e->getMessage());
+					continue;
+				}
+			}else{
+				// update order
+
+				// FIXME. Implement saving not found field from CSV into DB
+				$order->fill([
+					'shop_id'       => $elem['program_id'],
+					//'status'        => null,
+					'cost'          => $elem['ebay_total_sale_amount'],
+					//'currency'      => null,
+					'created_at'    => $elem['click_timestamp']
+				]);
+				try{
+					$order->save();
+					$count_of_success_updated++;
+				}catch(\Exception $e){
+					$count_of_errors++;
+					$this->logger->error('Database exception: '.$e->getMessage());
+					continue;
+				}
+			}
+		}
+
+		// free memory
+		unset($this->import_data);
+
+		$this->logger->info('Import was done.');
+		$this->logger->info("Orders [created, updated, error]", [$count_of_success_created, $count_of_success_updated, $count_of_errors]);
+
+		return true;
+	}
+
+	/**
+	 * Validate required order field
+	 *
+	 * @param array $order
+	 * @return bool
+	 */
+	private function validateOrder($order)
+	{
+		foreach($this->required_fields as $field){
+			if(!isset($order[$field]) /*|| empty($order[$field])*/)
+				return false;
+
+			// additional validation
+		}
 
 		return true;
 	}

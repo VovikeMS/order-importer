@@ -143,6 +143,7 @@ class Xml extends Importer implements Importable
 	 * Validate order object for required fields
 	 *
 	 * @param \SimpleXMLElement $xmlOrderObject
+	 * @return bool
 	 */
 	private function validateOrder($xmlOrderObject)
 	{
@@ -152,6 +153,7 @@ class Xml extends Importer implements Importable
 
 			// additional validation
 		}
+
 		return true;
 	}
 
