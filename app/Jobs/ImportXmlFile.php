@@ -7,6 +7,8 @@ use App\Importer\Factory as Importer;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Log;
+use Exception;
 
 class ImportXmlFile extends Job implements ShouldQueue
 {
@@ -31,9 +33,9 @@ class ImportXmlFile extends Job implements ShouldQueue
     {
 	    $xml_importer = null;
 
-	    \Log::info('Start import of orders from XML API. Trying '.$this->attempts());
+	    Log::info('Start import of orders from XML API. Trying '.$this->attempts());
 	    if($this->attempts() > 3){
-		    \Log::error('Overload max attempts of trying to run job ImportXmlFile.');
+		    Log::error('Overload max attempts of trying to run job ImportXmlFile.');
 	    	$this->release(60);
 			return false;
 	    }
@@ -45,13 +47,13 @@ class ImportXmlFile extends Job implements ShouldQueue
 		    if($xml_importer->validate())
 			    $xml_importer->import();
 
-	    }catch(\Exception $e){
-		    \Log::error($e->getMessage());
+	    }catch(Exception $e){
+		    Log::error($e->getMessage());
 		    $this->failed();
 		    return false;
 	    }
 
-	    \Log::info('Stop import of orders from XML API.');
+	    Log::info('Stop import of orders from XML API.');
 
 	    return true;
     }

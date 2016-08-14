@@ -7,6 +7,8 @@ use App\Importer\Factory as Importer;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Log;
+use Exception;
 
 class ImportCsvFile extends Job implements ShouldQueue
 {
@@ -31,9 +33,9 @@ class ImportCsvFile extends Job implements ShouldQueue
     {
 	    $csv_importer = null;
 
-	    \Log::info('Start import of orders from CSV API. Trying '.$this->attempts());
+	    Log::info('Start import of orders from CSV API. Trying '.$this->attempts());
 	    if($this->attempts() > 3){
-		    \Log::error('Overload max attempts of trying to run job ImportCsvFile.');
+		    Log::error('Overload max attempts of trying to run job ImportCsvFile.');
 		    $this->release(60);
 		    return false;
 	    }
@@ -45,13 +47,13 @@ class ImportCsvFile extends Job implements ShouldQueue
 		    if($csv_importer->validate())
 			    $csv_importer->import();
 
-	    }catch(\Exception $e){
-		    \Log::error($e->getMessage());
+	    }catch(Exception $e){
+		    Log::error($e->getMessage());
 		    $this->failed();
 		    return false;
 	    }
 
-	    \Log::info('Stop import of orders from CSV API');
+	    Log::info('Stop import of orders from CSV API');
 
 	    return true;
     }
