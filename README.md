@@ -20,6 +20,7 @@ After config your app check logs in `storage\logs`  and database table `orders` 
 	* `XML_API_SOURCE` - xml import file url
 	* `CSV_API_SOURCE` - csv import file url
 - Run `composer install`
+- Run `composer update`
 - Run `php artisan key:generate`
 - Run `php artisan migrate`
 - Give write access to folder `bootstrap/cache` (`chmod -R 775 bootstrap/cache`)
