@@ -1,27 +1,95 @@
-# Laravel PHP Framework
+# Order importer application
 
-[![Build Status](https://travis-ci.org/laravel/framework.svg)](https://travis-ci.org/laravel/framework)
-[![Total Downloads](https://poser.pugx.org/laravel/framework/d/total.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Stable Version](https://poser.pugx.org/laravel/framework/v/stable.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Unstable Version](https://poser.pugx.org/laravel/framework/v/unstable.svg)](https://packagist.org/packages/laravel/framework)
-[![License](https://poser.pugx.org/laravel/framework/license.svg)](https://packagist.org/packages/laravel/framework)
+This application uses for regular import data from third party services.
+After config your app check logs in `storage\logs`  and database table `orders` after some time.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as authentication, routing, sessions, queueing, and caching.
+## Install notes
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications. A superb inversion of control container, expressive migration system, and tightly integrated unit testing support give you the tools you need to build any application with which you are tasked.
+- Clone this repository
+- Open console and go to root of your cloned repository
+- Copy `.env.example` to `.env` and open
+- Update variables according to your local and save file
+	* `APP_ENV` - environment key `local`, `production`, `staging`
+	* `APP_DEBUG` - true or false
+	* `APP_URL` - full url to your application
+	* `DB_HOST` - database host
+	* `DB_PORT` - database port
+	* `DB_DATABASE` - database name
+	* `DB_USERNAME` - database user name
+	* `DB_PASSWORD` - database user password
+	* `XML_API_SOURCE` - xml import file url
+	* `CSV_API_SOURCE` - csv import file url
+- Run `composer install`
+- Run `php artisan key:generate`
+- Run `php artisan migrate`
+- Give write access to folder `bootstrap/cache` (`chmod -R 775 bootstrap/cache`)
+- Give write access to folder `storage/*` (`chmod -R 775 storage`)
+- [Add application scheduler](https://laravel.com/docs/5.2/scheduling#introduction) to your local cron:
+	* `* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1`
+- Choose your [method for listen queue jobs](https://laravel.com/docs/5.2/queues#running-the-queue-listener) in your system. You can just run `php artisan queue:work connection-name --daemon --sleep=3 --tries=3` for listen jobs (this command should be worked every time). 
 
-## Official Documentation
+## Adding new import format
 
-Documentation for the framework can be found on the [Laravel website](http://laravel.com/docs).
+For add new import format you should create new class in folder `app\Importer\Services`.
+Add this code to your importer, where replace Type to your new import type:
+```php
+<?php
 
-## Contributing
+namespace App\Importer\Services;
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](http://laravel.com/docs/contributions).
+use App\Importer\Importable;
+use App\Importer\Importer;
 
-## Security Vulnerabilities
+class Type extends Importer implements Importable
+{
+	protected $name = 'Type';
+	protected $type = 'type';
+	protected $mime_type = 'mime type for your type';
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell at taylor@laravel.com. All security vulnerabilities will be promptly addressed.
+	/**
+	 * Type constructor.
+	 *
+	 * @param string $resource
+	 */
+	public function __construct($resource)
+	{
+		parent::__construct($resource);
+	}
 
-## License
+	/**
+	 * Validate input data
+	 *
+	 * @return boolean
+	 */
+	public function validate()
+	{
+		// $this->source_data - contain response from $resource
 
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+		return true;
+	}
+
+	/**
+	 * Start process
+	 *
+	 * @return boolean
+	 */
+	public function import()
+	{
+		//
+
+		return true;
+	}
+}
+```
+Method `validate()` should check `$this->source_data` variable for valid type format.
+Method `import()` parse response data and import data to DB.
+You can use local instance `$this->logger` of `Logger` class what give you access to log your parser events in file `storage/logs/type_importer.log`.
+
+Then you should run importer where you need by next code:
+```php
+$xml_importer = App\Importer\Facade::create('type', 'http://path-to-api-method.com');
+if($xml_importer->validate())
+	$xml_importer->import();
+```
+
+After you cah check log file in folder `storage\logs`.
