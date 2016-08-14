@@ -26,12 +26,12 @@ After config your app check logs in `storage\logs`  and database table `orders` 
 - Give write access to folder `storage/*` (`chmod -R 775 storage`)
 - [Add application scheduler](https://laravel.com/docs/5.2/scheduling#introduction) to your local cron:
 	* `* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1`
-- Choose your [method for listen queue jobs](https://laravel.com/docs/5.2/queues#running-the-queue-listener) in your system. You can just run `php artisan queue:work connection-name --daemon --sleep=3 --tries=3` for listen jobs (this command should be worked every time). 
+- Choose your [method for listen queue jobs](https://laravel.com/docs/5.2/queues#running-the-queue-listener) in your system. You can just run `php artisan queue:work --daemon --sleep=3 --tries=3` for listen jobs (this command should be worked every time). 
 
 ## Adding new import format
 
-For add new import format you should create new class in folder `app\Importer\Services`.
-Add this code to your importer, where replace Type to your new import type:
+For add new import format you should create new class in folder `App\Importer\Services`.
+Add this code to your importer, where replace `Type` and `type` word to your new import type:
 ```php
 <?php
 
@@ -44,7 +44,7 @@ class Type extends Importer implements Importable
 {
 	protected $name = 'Type';
 	protected $type = 'type';
-	protected $mime_type = 'mime type for your type';
+	protected $mime_type = 'mime-type-for-your-type';
 
 	/**
 	 * Type constructor.
@@ -138,3 +138,9 @@ if($xml_importer->validate())
 ```
 
 After you cah check log file in folder `storage\logs`.
+
+## Error handling
+
+If you see nothing in database `order` table please check `storage\logs\laravel.log` to see what happens.
+If you see nothing in logs then check your cron and scheduler configuration.
+For debug importer tasks just run in console `php artisan schedule:run` then `php artisan queue:work`.
