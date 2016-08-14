@@ -94,7 +94,10 @@ class Xml extends Importer implements Importable
 			$order = Order::where('order_id', '=', (string)$elem->order_id)->first();
 			if($order == null){
 				// new order
+
+				$order = new Order();
 				$order->fill([
+					'order_id'      => (string)$elem->order_id,
 					'shop_id'       => (string)$elem->advcampaign_id,
 					'status'        => (string)$elem->status,
 					'cost'          => (string)$elem->cart,

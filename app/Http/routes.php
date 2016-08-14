@@ -26,15 +26,15 @@ Route::get('/import', function () {
 	// Run xml importer
 	try{
 
-		//$xml_importer = Importer::create('xml', env('XML_API_SOURCE'));
-		//if($xml_importer->validate())
-			//$xml_importer->import();
+		$xml_importer = Importer::create('xml', env('XML_API_SOURCE'));
+		if($xml_importer->validate())
+			$xml_importer->import();
 
 	}catch(Exception $e){
 		Log::error($e->getMessage());
 	}
 
-	// create instance for csv importer
+	// run csv importer
 	try{
 
 		$csv_importer = Importer::create('csv', env('CSV_API_SOURCE'));
