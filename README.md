@@ -85,9 +85,54 @@ Method `validate()` should check `$this->source_data` variable for valid type fo
 Method `import()` parse response data and import data to DB.
 You can use local instance `$this->logger` of `Logger` class what give you access to log your parser events in file `storage/logs/type_importer.log`.
 
+Then open file `App\Importer\Factory.php` and add new import format into factory.
+After added new type `type` `Factory.php` should be like:
+```php
+<?php
+
+namespace App\Importer;
+
+use App\Importer\Services\Csv;
+use App\Importer\Services\Xml;
+use App\Importer\Services\Type;
+
+abstract class Factory
+{
+	/**
+	 * Registered importers type
+	 *
+	 * @var array
+	 */
+	private static $importerTypes = ['csv', 'xml', 'type'];
+
+	/**
+	 * Generate importer instance according type of importer
+	 *
+	 * @param string $type
+	 * @param string $resource
+	 * @return Csv|Xml|Type|false
+	 * @throws \Exception
+	 */
+	public static function create($type, $resource)
+	{
+
+		if(!in_array($type, self::$importerTypes))
+			throw new \Exception("Uncaught type of importer [$type]. Importer abort");
+
+		switch($type){
+			case 'csv': return new Csv($resource);
+			case 'xml': return new Xml($resource);
+			case 'type': return new Type($resource);
+		}
+
+		return false;
+	}
+}
+```
+
 Then you should run importer where you need by next code:
 ```php
-$xml_importer = App\Importer\Facade::create('type', 'http://path-to-api-method.com');
+$xml_importer = App\Importer\Factory::create('type', 'http://path-to-api-method.com');
 if($xml_importer->validate())
 	$xml_importer->import();
 ```
